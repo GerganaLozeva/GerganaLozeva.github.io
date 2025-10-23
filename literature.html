@@ -173,9 +173,17 @@
       document.getElementById("current-score").textContent = currentScore;
 
       const msg = document.getElementById("result-message");
-      msg.classList.remove("hidden");
-      msg.textContent = correct === inputs.length ? "✅ Всички верни!" : `✔ ${correct} верни отговора`;
-      setTimeout(nextRound, 2000);
+      // Показваме резултатното съобщение
+msg.classList.remove("hidden");
+msg.textContent = correct === inputs.length
+  ? "✅ Всички верни!"
+  : `✔ ${correct} верни отговора. Виж вярните отговори и натисни „Продължи“.`;
+
+document.getElementById("next-question").classList.remove("hidden");
+document.getElementById("next-question").addEventListener("click", () => {
+  document.getElementById("next-question").classList.add("hidden");
+  nextRound();
+
     });
 
     function endGame() {
@@ -187,5 +195,6 @@
     </script>
 </body>
 </html>
+
 
 

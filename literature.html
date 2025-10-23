@@ -92,11 +92,20 @@
 
       const available = [...fields];
       const rareFields = available.filter(f => {
-        const real = fieldMap[f];
-        if (real === "Жанр" && genreFrequency[row["Жанр"]] > 1) return false;
-        if (real === "Тема" && themeFrequency[row["Тема"]] > 1) return false;
-        return true;
-      });
+  const real = fieldMap[f];
+
+  
+  if (real === "Жанр" && genreFrequency[row["Жанр"]] > 1) return false;
+  if (real === "Тема" && themeFrequency[row["Тема"]] > 1) return false;
+
+  
+  if (real === "Автор" && row["Автор"] === "Иван Вазов") {
+    return false; // Не показваме автора самостоятелно
+  }
+
+  return true;
+});
+
 
       const showFields = new Set();
       const pool = rareFields.length >= 2 ? rareFields : available;
@@ -161,3 +170,4 @@
     </script>
 </body>
 </html>
+

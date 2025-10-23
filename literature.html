@@ -37,7 +37,7 @@
   </div>
 
 <script>
-/* Данни от учебния материал */
+/* Данни */
 const literatureData = [
   { "Произведение":"Железният светилник","Автор":"Димитър Талев","Жанр":"Роман","Тема":"Родното и чуждото","Герои":"Султана, Лазар, Стоян, Ния, Рафе" },
   { "Произведение":"Бай Ганьо","Автор":"Алеко Константинов","Жанр":"Фейлетон","Тема":"Родното и чуждото","Герои":"Бай Ганьо, Гочоолу, Дочоолу" },
@@ -55,18 +55,24 @@ const literatureData = [
   { "Произведение":"Спи езерото","Автор":"Пенчо Славейков","Жанр":"Лирическа миниатюра","Тема":"Природата","Герои":"" }
 ];
 
-/* Основни променливи */
+/* Променливи */
 let score = 0;
 let used = new Set();
 let currentRow = null;
 
-/* Помощни функции */
+/* Помощни */
 function normalize(txt){
   return txt.toLowerCase().replace(/[„“"”'.,!?]/g,'').trim();
 }
 function match(a,b){
   a = normalize(a); b = normalize(b);
   return a && b && (a.includes(b) || b.includes(a));
+}
+function quote(str){
+  if (!str) return "";
+  str = str.trim();
+  if (!str.startsWith("„")) return `„${str}“`;
+  return str;
 }
 
 /* Стартира нова игра */
@@ -97,11 +103,9 @@ function nextRound(){
   used.add(row["Произведение"]);
   currentRow = row;
 
-  // кавички
-  let title = row["Произведение"];
-  if (!title.startsWith("„")) title = `„${title}“`;
+  // кавички за произведението
+  row["Произведение"] = quote(row["Произведение"]);
 
-  // ако авторът се повтаря, показваме Автор + Тема
   const sameAuthorCount = literatureData.filter(r=>r["Автор"]===row["Автор"]).length;
   const show = new Set();
 
@@ -119,7 +123,8 @@ function nextRound(){
     const div = document.createElement("div");
     div.className = "text-lg";
     div.innerHTML = `<strong>${f === "Герои" ? "Герой" : f}:</strong> `;
-    const val = row[f] || "";
+    let val = row[f] || "";
+    if (f === "Произведение") val = quote(val);
 
     if (show.has(f)){
       div.innerHTML += `<span class="text-indigo-700 font-medium">${val}</span>`;
@@ -152,7 +157,7 @@ function checkAnswers(){
       inp.classList.add("border-red-500");
       const span = document.createElement("span");
       span.className = "text-green-600 ml-2";
-      span.textContent = `Вярно: ${right}`;
+      span.textContent = `Вярно: ${quote(right)}`;
       inp.parentNode.appendChild(span);
     }
   });

@@ -10,6 +10,10 @@
   <div class="max-w-2xl w-full mx-auto p-4 sm:p-6 bg-white rounded-2xl shadow-lg mt-6 sm:mt-10">
     <h1 class="text-2xl font-bold text-center mb-6 text-indigo-700">🎓 Литературна викторина</h1>
 
+    <p class="text-center text-gray-600 mb-4">
+      Познай произведението по дадените данни!
+    </p>
+
     <div id="question-container" class="space-y-4"></div>
 
     <div class="mt-6 flex justify-between items-center">
@@ -30,7 +34,7 @@
   </div>
 
   <script>
-  // Таблица с данни от Excel
+  // 📘 Данни за произведенията
   const literatureData = [
     { "Произведение": "Железният светилник", "Автор": "Димитър Талев", "Жанр": "Роман", "Тема": "Родното и чуждото", "Герои": "Султана Глаушева, Лазар, Катерина, Стоян" },
     { "Произведение": "Бай Ганьо", "Автор": "Алеко Константинов", "Жанр": "Фейлетон", "Тема": "Родното и чуждото", "Герои": "Бай Ганьо, Гочоолу, Дочоолу" },
@@ -50,10 +54,12 @@
 
   const fields = ["Произведение", "Автор", "Жанр", "Тема", "Герой"];
   const fieldMap = { "Произведение": "Произведение", "Автор": "Автор", "Жанр": "Жанр", "Тема": "Тема", "Герой": "Герои" };
+
   let currentScore = 0;
   let usedCombos = new Set();
   let genreFrequency = {}, themeFrequency = {};
 
+  // Анализ колко често се среща даден жанр и тема
   function analyzeFrequencies() {
     genreFrequency = {}; themeFrequency = {};
     literatureData.forEach(i => {
@@ -74,6 +80,7 @@
     nextRound();
   }
 
+  // Основната функция за нов въпрос
   function nextRound() {
     if (usedCombos.size === literatureData.length) {
       endGame();
@@ -89,12 +96,10 @@
     const container = document.getElementById("question-container");
     container.innerHTML = "";
 
-    // Добавяме кавички на произведението
     if (row["Произведение"] && !row["Произведение"].startsWith("„")) {
       row["Произведение"] = `„${row["Произведение"]}“`;
     }
 
-    // Проверка колко пъти се среща авторът
     const authorCount = literatureData.filter(item => item["Автор"] === row["Автор"]).length;
 
     const available = [...fields];
@@ -108,12 +113,11 @@
     const showFields = new Set();
     const pool = rareFields.length >= 2 ? rareFields : available;
 
-    // Ако авторът се среща повече от веднъж, показваме "Автор + Тема"
+    // Ако авторът се среща повече от веднъж → показваме Автор + Тема
     if (authorCount > 1) {
       showFields.add("Автор");
       showFields.add("Тема");
     } else {
-      // Иначе случайно 2 от другите
       while (showFields.size < 2) showFields.add(pool[Math.floor(Math.random() * pool.length)]);
     }
 
@@ -143,6 +147,7 @@
     document.getElementById("result-message").classList.add("hidden");
   }
 
+  // Проверка на отговорите
   document.getElementById("check-answers").addEventListener("click", () => {
     const inputs = document.querySelectorAll("input[data-answer]");
     let correct = 0;
@@ -176,16 +181,18 @@
     msg.classList.remove("hidden");
     msg.textContent = correct === inputs.length
       ? "✅ Всички верни!"
-      : `✔ ${correct} верни отговора. Виж вярните отговори и натисни „Продължи“.`;
+      : `✔ ${correct} верни отговора. Виж вярните и натисни „Продължи“.`;
 
     document.getElementById("next-question").classList.remove("hidden");
   });
 
+  // Следващ въпрос
   document.getElementById("next-question").addEventListener("click", () => {
     document.getElementById("next-question").classList.add("hidden");
     nextRound();
   });
 
+  // Край на играта
   function endGame() {
     alert(`Играта приключи! Твоят резултат е ${currentScore} точки.`);
     startGame();

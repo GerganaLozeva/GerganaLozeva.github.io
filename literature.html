@@ -55,11 +55,6 @@ const literatureData = [
   { "Произведение":"Спи езерото","Автор":"Пенчо Славейков","Жанр":"Лирическа миниатюра","Тема":"Природата","Герои":"" }
 ];
 
-/* Променливи */
-let score = 0;
-let used = new Set();
-let currentRow = null;
-
 /* Помощни */
 function normalize(txt){
   return txt.toLowerCase().replace(/[„“"”'.,!?]/g,'').trim();
@@ -71,9 +66,15 @@ function match(a,b){
 function quote(str){
   if (!str) return "";
   str = str.trim();
-  if (!str.startsWith("„")) return `„${str}“`;
+  // гарантира кавички само ако ги няма
+  if (!str.startsWith("„") && !str.endsWith("“")) return `„${str}“`;
   return str;
 }
+
+/* Променливи */
+let score = 0;
+let used = new Set();
+let currentRow = null;
 
 /* Стартира нова игра */
 function startGame(){
@@ -102,9 +103,6 @@ function nextRound(){
   } while(used.has(row["Произведение"]));
   used.add(row["Произведение"]);
   currentRow = row;
-
-  // кавички за произведението
-  row["Произведение"] = quote(row["Произведение"]);
 
   const sameAuthorCount = literatureData.filter(r=>r["Автор"]===row["Автор"]).length;
   const show = new Set();
@@ -191,4 +189,3 @@ startGame();
 </script>
 </body>
 </html>
-

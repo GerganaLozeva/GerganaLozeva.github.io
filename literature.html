@@ -42,4 +42,156 @@
     { "Произведение": "Приказка за стълбата", "Автор": "Христо Смирненски", "Жанр": "Сатиричен разказ", "Тема": "Обществото и властта", "Герои": "Младият момък" },
     { "Произведение": "До моето първо либе", "Автор": "Христо Ботев", "Жанр": "Лирическо стихотворение", "Тема": "Животът и смъртта", "Герои": "" },
     { "Произведение": "Новото гробище над Сливница", "Автор": "Иван Вазов", "Жанр": "Лирическо стихотворение", "Тема": "Животът и смъртта", "Герои": "" },
-    { "Произведение": "Крадецът на праскови", "Автор": "Емилиян Станев", "Жанр": "Повест", "Тема": "Животът и смъртта", "Герои": "Иво, Елисавета, Полковн
+    { "Произведение": "Крадецът на праскови", "Автор": "Емилиян Станев", "Жанр": "Повест", "Тема": "Животът и смъртта", "Герои": "Иво, Елисавета, Полковникът" },
+    { "Произведение": "При Рилския манастир", "Автор": "Иван Вазов", "Жанр": "Лирическо стихотворение", "Тема": "Природата", "Герои": "" },
+    { "Произведение": "Градушка", "Автор": "Пейо Яворов", "Жанр": "Поема", "Тема": "Природата", "Герои": "" },
+    { "Произведение": "Спи езерото", "Автор": "Пенчо Славейков", "Жанр": "Лирическа миниатюра", "Тема": "Природата", "Герои": "" }
+  ];
+
+  const fields = ["Произведение", "Автор", "Жанр", "Тема", "Герой"];
+  const fieldMap = { "Произведение": "Произведение", "Автор": "Автор", "Жанр": "Жанр", "Тема": "Тема", "Герой": "Герои" };
+  let currentScore = 0;
+  let usedCombos = new Set();
+  let genreFrequency = {}, themeFrequency = {};
+
+  function analyzeFrequencies() {
+    genreFrequency = {}; themeFrequency = {};
+    literatureData.forEach(i => {
+      if (i["Жанр"]) genreFrequency[i["Жанр"]] = (genreFrequency[i["Жанр"]] || 0) + 1;
+      if (i["Тема"]) themeFrequency[i["Тема"]] = (themeFrequency[i["Тема"]] || 0) + 1;
+    });
+  }
+
+  function normalize(text) {
+    return text.toLowerCase().replace(/[„“"”'.,!?]/g, '').trim();
+  }
+
+  function startGame() {
+    analyzeFrequencies();
+    currentScore = 0;
+    usedCombos.clear();
+    document.getElementById("current-score").textContent = 0;
+    nextRound();
+  }
+
+  function nextRound() {
+    if (usedCombos.size === literatureData.length) {
+      endGame();
+      return;
+    }
+
+    let row;
+    do {
+      row = literatureData[Math.floor(Math.random() * literatureData.length)];
+    } while (usedCombos.has(row["Произведение"]) && usedCombos.size < literatureData.length);
+    usedCombos.add(row["Произведение"]);
+
+    const container = document.getElementById("question-container");
+    container.innerHTML = "";
+
+    // Добавяме кавички на произведението
+    if (row["Произведение"] && !row["Произведение"].startsWith("„")) {
+      row["Произведение"] = `„${row["Произведение"]}“`;
+    }
+
+    // Проверка колко пъти се среща авторът
+    const authorCount = literatureData.filter(item => item["Автор"] === row["Автор"]).length;
+
+    const available = [...fields];
+    const rareFields = available.filter(f => {
+      const real = fieldMap[f];
+      if (real === "Жанр" && genreFrequency[row["Жанр"]] > 1) return false;
+      if (real === "Тема" && themeFrequency[row["Тема"]] > 1) return false;
+      return true;
+    });
+
+    const showFields = new Set();
+    const pool = rareFields.length >= 2 ? rareFields : available;
+
+    // Ако авторът се среща повече от веднъж, показваме "Автор + Тема"
+    if (authorCount > 1) {
+      showFields.add("Автор");
+      showFields.add("Тема");
+    } else {
+      // Иначе случайно 2 от другите
+      while (showFields.size < 2) showFields.add(pool[Math.floor(Math.random() * pool.length)]);
+    }
+
+    fields.forEach(f => {
+      const real = fieldMap[f];
+      let value = row[real] || "";
+      if (f === "Герой" && value) {
+        const heroes = value.split(",").map(x => x.trim()).filter(x => x);
+        if (heroes.length > 1) value = heroes[Math.floor(Math.random() * heroes.length)];
+      }
+
+      const div = document.createElement("div");
+      div.className = "text-lg";
+      div.innerHTML = `<strong>${f}:</strong> `;
+
+      if (showFields.has(f)) {
+        div.innerHTML += `<span class="text-indigo-700 font-medium">${value}</span>`;
+      } else if (value) {
+        div.innerHTML += `
+          <input type="text" data-answer="${value}"
+            class="border-b border-gray-400 focus:border-indigo-500 w-3/4 outline-none">
+          <span class="text-sm text-gray-500 ml-2">(${f})</span>`;
+      }
+      container.appendChild(div);
+    });
+
+    document.getElementById("result-message").classList.add("hidden");
+  }
+
+  document.getElementById("check-answers").addEventListener("click", () => {
+    const inputs = document.querySelectorAll("input[data-answer]");
+    let correct = 0;
+
+    inputs.forEach(inp => {
+      const ans = normalize(inp.dataset.answer);
+      const val = normalize(inp.value);
+
+      const oldFeedback = inp.parentNode.querySelector(".correct-answer");
+      if (oldFeedback) oldFeedback.remove();
+
+      if (ans.includes(val) && val.length > 0) {
+        inp.classList.add("border-green-500");
+        inp.classList.remove("border-red-500");
+        correct++;
+      } else {
+        inp.classList.add("border-red-500");
+        inp.classList.remove("border-green-500");
+
+        const correctEl = document.createElement("span");
+        correctEl.className = "correct-answer text-green-600 ml-3";
+        correctEl.textContent = `Вярно: ${inp.dataset.answer}`;
+        inp.parentNode.appendChild(correctEl);
+      }
+    });
+
+    currentScore += correct;
+    document.getElementById("current-score").textContent = currentScore;
+
+    const msg = document.getElementById("result-message");
+    msg.classList.remove("hidden");
+    msg.textContent = correct === inputs.length
+      ? "✅ Всички верни!"
+      : `✔ ${correct} верни отговора. Виж вярните отговори и натисни „Продължи“.`;
+
+    document.getElementById("next-question").classList.remove("hidden");
+  });
+
+  document.getElementById("next-question").addEventListener("click", () => {
+    document.getElementById("next-question").classList.add("hidden");
+    nextRound();
+  });
+
+  function endGame() {
+    alert(`Играта приключи! Твоят резултат е ${currentScore} точки.`);
+    startGame();
+  }
+
+  startGame();
+  </script>
+</body>
+</html>

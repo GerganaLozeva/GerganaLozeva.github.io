@@ -1,0 +1,160 @@
+﻿<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <title>Литературна викторина</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-800">
+    <div class="max-w-2xl mx-auto p-6 bg-white rounded-2xl shadow-lg mt-10">
+        <h1 class="text-2xl font-bold text-center mb-6 text-indigo-700">🎓 Литературна викторина</h1>
+
+        <div id="question-container" class="space-y-4"></div>
+
+        <div class="mt-6 flex justify-between items-center">
+            <button id="check-answers" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg">Провери</button>
+            <div>Точки: <span id="current-score" class="font-semibold">0</span></div>
+        </div>
+
+        <div id="result-message" class="text-center mt-4 text-lg font-semibold hidden"></div>
+    </div>
+
+    <script>
+    // Таблица с данни от Excel (тук вкарах примерни записи – ти можеш да допълниш с всички)
+    const literatureData = [
+      { "Произведение": "Железният светилник", "Автор": "Димитър Талев", "Жанр": "Роман", "Тема": "Родното и чуждото", "Герои": "Султана Глаушева, Лазар, Катерина, Стоян" },
+      { "Произведение": "Бай Ганьо", "Автор": "Алеко Константинов", "Жанр": "Фейлетон", "Тема": "Родното и чуждото", "Герои": "Бай Ганьо, Гочоолу, Дочоолу" },
+      { "Произведение": "Балкански синдром", "Автор": "Станислав Стратиев", "Жанр": "Драма", "Тема": "Родното и чуждото", "Герои": "Директорът, Пепо, Професорът" },
+      { "Произведение": "Паисий", "Автор": "Иван Вазов", "Жанр": "Ода", "Тема": "Миналото и паметта", "Герои": "" },
+      { "Произведение": "История", "Автор": "Никола Вапцаров", "Жанр": "Лирическо стихотворение", "Тема": "Миналото и паметта", "Герои": "" },
+      { "Произведение": "Борба", "Автор": "Христо Ботев", "Жанр": "Социално-политическо стихотворение", "Тема": "Обществото и властта", "Герои": "" },
+      { "Произведение": "Андрешко", "Автор": "Елин Пелин", "Жанр": "Разказ", "Тема": "Обществото и властта", "Герои": "Андрешко, Съдия-изпълнителя" },
+      { "Произведение": "Приказка за стълбата", "Автор": "Христо Смирненски", "Жанр": "Сатиричен разказ", "Тема": "Обществото и властта", "Герои": "Младият момък" },
+      { "Произведение": "До моето първо либе", "Автор": "Христо Ботев", "Жанр": "Лирическо стихотворение", "Тема": "Животът и смъртта", "Герои": "" },
+      {"Произведение": "Новото гробище над Сливница", "Автор": "Иван Вазов", "Жанр": "Лирическо стихотворение", "Тема": "Животът и смъртта", "Герои": "" },
+      { "Произведение": "Крадецът на праскови", "Автор": "Емилиян Станев", "Жанр": "Повест", "Тема": "Животът и смъртта", "Герои": "Иво, Елисавета, Полковникът" },
+      {"Произведение": "При Рилския манастир", "Автор": "Иван Вазов", "Жанр": "Лирическо стихотворение", "Тема": "Природата", "Герои": "" },
+      {"Произведение": "Градушка", "Автор": "Пейо Яворов", "Жанр": "Поема", "Тема": "Природата", "Герои": "" },
+      {"Произведение": "Спи езерото", "Автор": "Пенчо Славейков", "Жанр": "Лирическа миниатюра", "Тема": "Природата", "Герои": "" }
+    ];
+    const fields = ["Произведение", "Автор", "Жанр", "Тема", "Герой"];
+    const fieldMap = { "Произведение": "Произведение", "Автор": "Автор", "Жанр": "Жанр", "Тема": "Тема", "Герой": "Герои" };
+
+    let currentScore = 0;
+    let usedCombos = new Set();
+    let genreFrequency = {}, themeFrequency = {};
+
+    // Анализ на повторения
+    function analyzeFrequencies() {
+      genreFrequency = {};
+      themeFrequency = {};
+      literatureData.forEach(i => {
+        if (i["Жанр"]) genreFrequency[i["Жанр"]] = (genreFrequency[i["Жанр"]] || 0) + 1;
+        if (i["Тема"]) themeFrequency[i["Тема"]] = (themeFrequency[i["Тема"]] || 0) + 1;
+      });
+    }
+
+    // Нормализиране на текст за проверка
+    function normalize(text) {
+      return text.toLowerCase().replace(/[„“"”'.,!?]/g, '').trim();
+    }
+
+    function startGame() {
+      analyzeFrequencies();
+      currentScore = 0;
+      usedCombos.clear();
+      document.getElementById("current-score").textContent = 0;
+      nextRound();
+    }
+
+    function nextRound() {
+      if (usedCombos.size === literatureData.length) {
+        endGame();
+        return;
+      }
+
+      let row;
+      do {
+        row = literatureData[Math.floor(Math.random() * literatureData.length)];
+      } while (usedCombos.has(row["Произведение"]) && usedCombos.size < literatureData.length);
+      usedCombos.add(row["Произведение"]);
+
+      const container = document.getElementById("question-container");
+      container.innerHTML = "";
+
+      // добавяме кавички на произведението
+      if (row["Произведение"] && !row["Произведение"].startsWith("„")) {
+        row["Произведение"] = `„${row["Произведение"]}“`;
+      }
+
+      const available = [...fields];
+      const rareFields = available.filter(f => {
+        const real = fieldMap[f];
+        if (real === "Жанр" && genreFrequency[row["Жанр"]] > 1) return false;
+        if (real === "Тема" && themeFrequency[row["Тема"]] > 1) return false;
+        return true;
+      });
+
+      const showFields = new Set();
+      const pool = rareFields.length >= 2 ? rareFields : available;
+      while (showFields.size < 2) showFields.add(pool[Math.floor(Math.random() * pool.length)]);
+
+      fields.forEach(f => {
+        const real = fieldMap[f];
+        let value = row[real] || "";
+        if (f === "Герой" && value) {
+          const heroes = value.split(",").map(x => x.trim()).filter(x => x);
+          if (heroes.length > 1) value = heroes[Math.floor(Math.random() * heroes.length)];
+        }
+
+        const div = document.createElement("div");
+        div.className = "text-lg";
+        div.innerHTML = `<strong>${f}:</strong> `;
+
+        if (showFields.has(f)) {
+          div.innerHTML += `<span class="text-indigo-700 font-medium">${value}</span>`;
+        } else if (value) {
+          div.innerHTML += `
+            <input type="text" data-answer="${value}"
+              class="border-b border-gray-400 focus:border-indigo-500 w-3/4 outline-none">
+            <span class="text-sm text-gray-500 ml-2">(${f})</span>`;
+        }
+        container.appendChild(div);
+      });
+
+      document.getElementById("result-message").classList.add("hidden");
+    }
+
+    document.getElementById("check-answers").addEventListener("click", () => {
+      const inputs = document.querySelectorAll("input[data-answer]");
+      let correct = 0;
+
+      inputs.forEach(inp => {
+        const ans = normalize(inp.dataset.answer);
+        const val = normalize(inp.value);
+        if (ans.includes(val) && val.length > 0) {
+          inp.classList.add("border-green-500");
+          correct++;
+        } else {
+          inp.classList.add("border-red-500");
+        }
+      });
+
+      currentScore += correct;
+      document.getElementById("current-score").textContent = currentScore;
+
+      const msg = document.getElementById("result-message");
+      msg.classList.remove("hidden");
+      msg.textContent = correct === inputs.length ? "✅ Всички верни!" : `✔ ${correct} верни отговора`;
+      setTimeout(nextRound, 2000);
+    });
+
+    function endGame() {
+      alert(`Играта приключи! Твоят резултат е ${currentScore} точки.`);
+      startGame();
+    }
+
+    startGame();
+    </script>
+</body>
+</html>

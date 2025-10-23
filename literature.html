@@ -3,31 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Литературна викторина</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 text-gray-800">
     <div class="max-w-2xl w-full mx-auto p-4 sm:p-6 bg-white rounded-2xl shadow-lg mt-6 sm:mt-10">
-
         <h1 class="text-2xl font-bold text-center mb-6 text-indigo-700">🎓 Литературна викторина</h1>
 
         <div id="question-container" class="space-y-4"></div>
 
         <div class="mt-6 flex justify-between items-center">
-            <button id="check-answers" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg">Провери</button>
+            <button id="check-answers" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg">
+                Провери
+            </button>
             <div>Точки: <span id="current-score" class="font-semibold">0</span></div>
         </div>
-        <div class="mt-4 text-center">
-            <button id="next-question" class="hidden bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">Продължи</button>
-        </div>
 
+        <!-- Нов бутон "Продължи" -->
+        <div class="mt-4 text-center">
+            <button id="next-question" class="hidden bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">
+                Продължи
+            </button>
+        </div>
 
         <div id="result-message" class="text-center mt-4 text-lg font-semibold hidden"></div>
     </div>
 
     <script>
-    // Таблица с данни от Excel (тук вкарах примерни записи – ти можеш да допълниш с всички)
+    // Таблица с данни от Excel
     const literatureData = [
       { "Произведение": "Железният светилник", "Автор": "Димитър Талев", "Жанр": "Роман", "Тема": "Родното и чуждото", "Герои": "Султана Глаушева, Лазар, Катерина, Стоян" },
       { "Произведение": "Бай Ганьо", "Автор": "Алеко Константинов", "Жанр": "Фейлетон", "Тема": "Родното и чуждото", "Герои": "Бай Ганьо, Гочоолу, Дочоолу" },
@@ -44,24 +47,21 @@
       {"Произведение": "Градушка", "Автор": "Пейо Яворов", "Жанр": "Поема", "Тема": "Природата", "Герои": "" },
       {"Произведение": "Спи езерото", "Автор": "Пенчо Славейков", "Жанр": "Лирическа миниатюра", "Тема": "Природата", "Герои": "" }
     ];
+
     const fields = ["Произведение", "Автор", "Жанр", "Тема", "Герой"];
     const fieldMap = { "Произведение": "Произведение", "Автор": "Автор", "Жанр": "Жанр", "Тема": "Тема", "Герой": "Герои" };
-
     let currentScore = 0;
     let usedCombos = new Set();
     let genreFrequency = {}, themeFrequency = {};
 
-    // Анализ на повторения
     function analyzeFrequencies() {
-      genreFrequency = {};
-      themeFrequency = {};
+      genreFrequency = {}; themeFrequency = {};
       literatureData.forEach(i => {
         if (i["Жанр"]) genreFrequency[i["Жанр"]] = (genreFrequency[i["Жанр"]] || 0) + 1;
         if (i["Тема"]) themeFrequency[i["Тема"]] = (themeFrequency[i["Тема"]] || 0) + 1;
       });
     }
 
-    // Нормализиране на текст за проверка
     function normalize(text) {
       return text.toLowerCase().replace(/[„“"”'.,!?]/g, '').trim();
     }
@@ -76,10 +76,8 @@
 
     function nextRound() {
       if (usedCombos.size === literatureData.length) {
-        endGame();
-        return;
+        endGame(); return;
       }
-
       let row;
       do {
         row = literatureData[Math.floor(Math.random() * literatureData.length)];
@@ -89,27 +87,17 @@
       const container = document.getElementById("question-container");
       container.innerHTML = "";
 
-      // добавяме кавички на произведението
       if (row["Произведение"] && !row["Произведение"].startsWith("„")) {
         row["Произведение"] = `„${row["Произведение"]}“`;
       }
 
       const available = [...fields];
       const rareFields = available.filter(f => {
-  const real = fieldMap[f];
-
-  
-  if (real === "Жанр" && genreFrequency[row["Жанр"]] > 1) return false;
-  if (real === "Тема" && themeFrequency[row["Тема"]] > 1) return false;
-
-  
-  if (real === "Автор" && row["Автор"] === "Иван Вазов") {
-    return false; // Не показваме автора самостоятелно
-  }
-
-  return true;
-});
-
+        const real = fieldMap[f];
+        if (real === "Жанр" && genreFrequency[row["Жанр"]] > 1) return false;
+        if (real === "Тема" && themeFrequency[row["Тема"]] > 1) return false;
+        return true;
+      });
 
       const showFields = new Set();
       const pool = rareFields.length >= 2 ? rareFields : available;
@@ -146,44 +134,42 @@
       let correct = 0;
 
       inputs.forEach(inp => {
-  const ans = normalize(inp.dataset.answer);
-  const val = normalize(inp.value);
+        const ans = normalize(inp.dataset.answer);
+        const val = normalize(inp.value);
 
-  // Премахваме предишен текст (ако има)
-  const oldFeedback = inp.parentNode.querySelector(".correct-answer");
-  if (oldFeedback) oldFeedback.remove();
+        const oldFeedback = inp.parentNode.querySelector(".correct-answer");
+        if (oldFeedback) oldFeedback.remove();
 
-  if (ans.includes(val) && val.length > 0) {
-    inp.classList.add("border-green-500");
-    inp.classList.remove("border-red-500");
-    correct++;
-  } else {
-    inp.classList.add("border-red-500");
-    inp.classList.remove("border-green-500");
+        if (ans.includes(val) && val.length > 0) {
+          inp.classList.add("border-green-500");
+          inp.classList.remove("border-red-500");
+          correct++;
+        } else {
+          inp.classList.add("border-red-500");
+          inp.classList.remove("border-green-500");
 
-    // ✅ Показваме вярния отговор вдясно
-    const correctEl = document.createElement("span");
-    correctEl.className = "correct-answer text-green-600 ml-3";
-    correctEl.textContent = `Вярно: ${inp.dataset.answer}`;
-    inp.parentNode.appendChild(correctEl);
-  }
-});
+          const correctEl = document.createElement("span");
+          correctEl.className = "correct-answer text-green-600 ml-3";
+          correctEl.textContent = `Вярно: ${inp.dataset.answer}`;
+          inp.parentNode.appendChild(correctEl);
+        }
+      });
 
       currentScore += correct;
       document.getElementById("current-score").textContent = currentScore;
 
       const msg = document.getElementById("result-message");
-      // Показваме резултатното съобщение
-msg.classList.remove("hidden");
-msg.textContent = correct === inputs.length
-  ? "✅ Всички верни!"
-  : `✔ ${correct} верни отговора. Виж вярните отговори и натисни „Продължи“.`;
+      msg.classList.remove("hidden");
+      msg.textContent = correct === inputs.length
+        ? "✅ Всички верни!"
+        : `✔ ${correct} верни отговора. Виж вярните отговори и натисни „Продължи“.`;
 
-document.getElementById("next-question").classList.remove("hidden");
-document.getElementById("next-question").addEventListener("click", () => {
-  document.getElementById("next-question").classList.add("hidden");
-  nextRound();
+      document.getElementById("next-question").classList.remove("hidden");
+    });
 
+    document.getElementById("next-question").addEventListener("click", () => {
+      document.getElementById("next-question").classList.add("hidden");
+      nextRound();
     });
 
     function endGame() {
@@ -195,6 +181,3 @@ document.getElementById("next-question").addEventListener("click", () => {
     </script>
 </body>
 </html>
-
-
-

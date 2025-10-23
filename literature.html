@@ -18,6 +18,10 @@
             <button id="check-answers" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg">Провери</button>
             <div>Точки: <span id="current-score" class="font-semibold">0</span></div>
         </div>
+        <div class="mt-4 text-center">
+            <button id="next-question" class="hidden bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">Продължи</button>
+        </div>
+
 
         <div id="result-message" class="text-center mt-4 text-lg font-semibold hidden"></div>
     </div>
@@ -142,15 +146,28 @@
       let correct = 0;
 
       inputs.forEach(inp => {
-        const ans = normalize(inp.dataset.answer);
-        const val = normalize(inp.value);
-        if (ans.includes(val) && val.length > 0) {
-          inp.classList.add("border-green-500");
-          correct++;
-        } else {
-          inp.classList.add("border-red-500");
-        }
-      });
+  const ans = normalize(inp.dataset.answer);
+  const val = normalize(inp.value);
+
+  // Премахваме предишен текст (ако има)
+  const oldFeedback = inp.parentNode.querySelector(".correct-answer");
+  if (oldFeedback) oldFeedback.remove();
+
+  if (ans.includes(val) && val.length > 0) {
+    inp.classList.add("border-green-500");
+    inp.classList.remove("border-red-500");
+    correct++;
+  } else {
+    inp.classList.add("border-red-500");
+    inp.classList.remove("border-green-500");
+
+    // ✅ Показваме вярния отговор вдясно
+    const correctEl = document.createElement("span");
+    correctEl.className = "correct-answer text-green-600 ml-3";
+    correctEl.textContent = `Вярно: ${inp.dataset.answer}`;
+    inp.parentNode.appendChild(correctEl);
+  }
+});
 
       currentScore += correct;
       document.getElementById("current-score").textContent = currentScore;
@@ -170,4 +187,5 @@
     </script>
 </body>
 </html>
+
 

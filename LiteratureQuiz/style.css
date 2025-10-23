@@ -1,0 +1,70 @@
+/* Shared styles across all pages */
+body {
+    font-family: 'Roboto', sans-serif;
+}
+
+.subject-card {
+    display: block;
+    height: 250px;
+    border-radius: 16px;
+    padding: 2rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transform: translateY(0);
+}
+
+    .subject-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+    }
+
+.question-line {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 1.5rem;
+    font-size: 1.2rem;
+}
+
+.blank {
+    min-width: 150px;
+    border-bottom: 2px solid #4f46e5;
+    padding: 0.5rem 0;
+    position: relative;
+}
+
+    .blank input {
+        border: none;
+        outline: none;
+        width: 100%;
+        font-size: 1.1rem;
+        background: transparent;
+    }
+
+.blank-hint {
+    position: absolute;
+    bottom: -20px;
+    left: 0;
+    font-size: 0.8rem;
+    color: #6b7280;
+    width: 100%;
+}
+
+.score-display {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #4f46e5;
+    margin-top: 1rem;
+}
+
+.profile-form {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    max-width: 500px;
+    margin: 0 auto;
+}

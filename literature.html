@@ -59,16 +59,23 @@ const literatureData = [
 function normalize(txt){
   return txt.toLowerCase().replace(/[„“"”'.,!?]/g,'').trim();
 }
+
 function match(a,b){
   a = normalize(a); b = normalize(b);
   return a && b && (a.includes(b) || b.includes(a));
 }
+
 function quote(str){
   if (!str) return "";
   str = str.trim();
-  // гарантира кавички само ако ги няма
   if (!str.startsWith("„") && !str.endsWith("“")) return `„${str}“`;
   return str;
+}
+
+/* ✅ НОВА ФУНКЦИЯ — проверява дали текстът е правилно изписан в кавички */
+function isQuotedProperly(str){
+  str = str.trim();
+  return str.startsWith("„") && str.endsWith("“");
 }
 
 /* Променливи */
@@ -127,7 +134,7 @@ function nextRound(){
     if (show.has(f)){
       div.innerHTML += `<span class="text-indigo-700 font-medium">${val}</span>`;
     } else if (val){
-      div.innerHTML += `<input type="text" data-answer="${val}" class="border-b border-gray-400 focus:border-indigo-500 w-3/4 outline-none"> <span class='text-sm text-gray-500'>(${f})</span>`;
+      div.innerHTML += `<input type="text" data-field="${f}" data-answer="${val}" class="border-b border-gray-400 focus:border-indigo-500 w-3/4 outline-none"> <span class='text-sm text-gray-500'>(${f})</span>`;
     } else {
       div.innerHTML += `<span class="text-gray-400 italic">—</span>`;
     }
@@ -143,19 +150,36 @@ function checkAnswers(){
 
   inputs.forEach(inp=>{
     const right = inp.dataset.answer;
-    const val = inp.value;
+    const val = inp.value.trim();
+    const field = inp.dataset.field;
+
     inp.classList.remove("border-red-500","border-green-500");
     const old = inp.parentNode.querySelector(".text-green-600");
     if (old) old.remove();
 
-    if (match(val,right)){
+    let isCorrect = false;
+
+    if (field === "Произведение") {
+      // произведението трябва да е в кавички
+      if (isQuotedProperly(val) && match(val, right)) {
+        isCorrect = true;
+      }
+    } else {
+      if (match(val, right)) {
+        isCorrect = true;
+      }
+    }
+
+    if (isCorrect){
       inp.classList.add("border-green-500");
       correct++;
     } else {
       inp.classList.add("border-red-500");
       const span = document.createElement("span");
       span.className = "text-green-600 ml-2";
-      span.textContent = `Вярно: ${quote(right)}`;
+      span.textContent = field === "Произведение" 
+        ? `Вярно: ${quote(right)} (трябва да е в кавички „ “)` 
+        : `Вярно: ${quote(right)}`;
       inp.parentNode.appendChild(span);
     }
   });
